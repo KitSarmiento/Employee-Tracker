@@ -1,0 +1,24 @@
+{
+  "name": "employee-tracker",
+  "version": "1.0.0",
+  "description": "This week's project involves creating a command-line application using Node.js, Inquirer, and MySQL to manage a company's employee database.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KitSarmiento"
+  },
+  "keywords": [
+    "Empployee-Tracker",
+    "Tracker"
+  ],
+  "author": "Katrina Sarmiento",
+  "license": "MIT",
+  "dependencies": {
+    "inquirer": "^8.2.4",
+    "mysql2": "^3.6.1"
+  },
+  "devDependencies": {}
+}
