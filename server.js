@@ -23,10 +23,10 @@ const db = mysql.createConnection(
 );
 
 function mainTracker() {
-  inquirer.prompt(
-    [
+  inquirer
+    .prompt([
       {
-        type: "List",
+        type: "list",
         name: "action",
         message: "What would you like to do?",
         choices: [
@@ -35,12 +35,14 @@ function mainTracker() {
           "View all employees",
           "Add a department",
           "Add a role",
+          "Add an employee",
           "Update Employee Role",
           "Remove an employee",
           "Exit",
         ],
       },
-    ].then((answers) => {
+    ])
+    .then((answers) => {
       switch (answers.action) {
         case "View all departments":
           viewAllDepartments();
@@ -62,6 +64,10 @@ function mainTracker() {
           addARole();
           break;
 
+        case "Add an employee":
+          addAnEmployee();
+          break;
+
         case "Update Employee Role":
           updateAEmployeeRole();
           break;
@@ -74,6 +80,49 @@ function mainTracker() {
           connection.end();
           break;
       }
-    })
+    });
+}
+
+// Function to view all employees
+function viewAllEmployees() {
+  db.query(
+    "SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee INNER JOIN role ON employee.role_id = role.id",
+    function (err, result, fields) {
+      if (err) {
+        console.error("Error viewing employees: " + err);
+        return;
+      }
+      console.table(result);
+      mainTracker();
+    }
+  );
+}
+
+// Function to view all roles
+function viewAllRoles() {
+  db.query(
+    "SELECT role.id, role.title FROM role",
+    function (err, result, fields) {
+      if (err) {
+        console.error("Error viewing roles: " + err);
+        return;
+      }
+      console.table(result);
+      mainTracker();
+    }
+  );
+}
+
+function viewAllDepartments() {
+  db.query(
+    "SELECT department.id, department.name FROM department",
+    function (err, result, fields) {
+      if (err) {
+        console.error("Error viewing departments: " + err);
+        return;
+      }
+      console.table(result);
+      mainTracker();
+    }
   );
 }
