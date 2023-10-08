@@ -115,7 +115,10 @@ function mainTracker() {
 // Function to view all employees
 function viewAllEmployees() {
   db.query(
-    "SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee INNER JOIN role ON employee.role_id = role.id",
+    "SELECT e.id, e.first_name, e.last_name, r.title, r.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager " +
+      "FROM employee AS e " +
+      "INNER JOIN role AS r ON e.role_id = r.id " +
+      "LEFT JOIN employee AS m ON e.manager_id = m.id",
     function (err, result, fields) {
       if (err) {
         console.error("Error viewing employees: " + err);
@@ -130,7 +133,7 @@ function viewAllEmployees() {
 // Function to view all roles
 function viewAllRoles() {
   db.query(
-    "SELECT role.id, role.title FROM role",
+    "SELECT role.id, role.title, role.salary FROM role",
     function (err, result, fields) {
       if (err) {
         console.error("Error viewing roles: " + err);
@@ -181,7 +184,6 @@ function addDepartment() {
 }
 
 function addRole() {
-  // You can prompt the user for role details like title, salary, and department_id here
   inquirer
     .prompt([
       {
@@ -264,7 +266,6 @@ function addEmployee() {
 }
 
 function updateEmployeeRole() {
-  // Retrieve the list of employees and their roles
   db.query(
     'SELECT employee.id, CONCAT(employee.first_name, " ", employee.last_name) AS employee_name, role.id AS role_id, role.title AS current_role ' +
       "FROM employee " +
@@ -275,13 +276,11 @@ function updateEmployeeRole() {
         return;
       }
 
-      // Create an array of employee choices for the inquirer prompt
       const employeeChoices = employees.map((employee) => ({
         name: `${employee.employee_name} (Current Role: ${employee.current_role})`,
         value: employee.id,
       }));
 
-      // Prompt the user to select an employee
       inquirer
         .prompt([
           {
