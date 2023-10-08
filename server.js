@@ -244,7 +244,6 @@ function addEmployee() {
       },
     ])
     .then((answers) => {
-      //  confirm that manager_input exists and isn't null or undefined.
       const managerId =
         answers.manager_input && answers.manager_input.toLowerCase() === "n/a"
           ? null
@@ -372,6 +371,22 @@ function updateEmployeeManager() {
             }
           );
         });
+    }
+  );
+}
+
+function viewEmployeesByManager() {
+  db.query(
+    "SELECT e.id, CONCAT(e.first_name, ' ', e.last_name) AS employee_name, CONCAT(m.first_name, ' ', m.last_name) AS manager_name " +
+      "FROM employee e " +
+      "LEFT JOIN employee m ON e.manager_id = m.id",
+    (err, result) => {
+      if (err) {
+        console.error("Error viewing employees by manager: " + err);
+        return;
+      }
+      console.table(result);
+      mainTracker();
     }
   );
 }
