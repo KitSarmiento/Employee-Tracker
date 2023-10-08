@@ -1,6 +1,7 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const express = require("express");
+const cfonts = require("cfonts");
 
 const PORT = process.env.PORT || 3001;
 const app = express();
@@ -20,8 +21,28 @@ const db = mysql.createConnection(
   },
   console.log(`Connected to the employeeTracker_db database.`)
 );
+
+function displayTitle() {
+  cfonts.say("Katrina's Employee Tracker", {
+    font: "block",
+    align: "left",
+    colors: ["red", "blue"],
+    background: "transparent",
+    letterSpacing: 1,
+    lineHeight: 1,
+    space: true,
+    maxLength: "0",
+    gradient: false,
+    independentGradient: false,
+    transitionGradient: false,
+    env: "node",
+  });
+}
+
 // Prompt for the user to select the database they would like to select
 function mainTracker() {
+  displayTitle(); // call the display function to display the title once the user starts the application.
+
   inquirer
     .prompt([
       {
