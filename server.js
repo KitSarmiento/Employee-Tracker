@@ -39,10 +39,9 @@ function displayTitle() {
   });
 }
 
+displayTitle(); // call the display function to display the title once the user starts the application.
 // Prompt for the user to select the database they would like to select
 function mainTracker() {
-  displayTitle(); // call the display function to display the title once the user starts the application.
-
   inquirer
     .prompt([
       {
