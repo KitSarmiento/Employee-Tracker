@@ -1,5 +1,6 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
+const express = require("express");
 
 const PORT = process.env.PORT || 3001;
 const app = express();
@@ -13,9 +14,7 @@ const db = mysql.createConnection(
   {
     host: "localhost",
     port: 3306,
-    // MySQL username,
     user: "root",
-    // MySQL password will be provided once upon submitting the assignment.
     password: "radiantSeaside8!",
     database: "employeeTracker_db",
   },
@@ -30,14 +29,20 @@ function mainTracker() {
         name: "action",
         message: "What would you like to do?",
         choices: [
-          "View all departments",
-          "View all roles",
-          "View all employees",
-          "Add a department",
-          "Add a role",
-          "Add an employee",
-          "Update Employee Role",
-          "Remove an employee",
+          "View all departments", // Acceptance Criteria
+          "View all roles", // Acceptance Criteria
+          "View all employees", // Acceptance Criteria
+          "Add a department", // Acceptance Criteria
+          "Add a role", // Acceptance Criteria
+          "Add an employee", // Acceptance Criteria
+          "Update Employee Role", // Acceptance Criteria
+          "Update Employee Manager", //Bonus
+          "View Employees by Manager", // Bonus
+          "View Employees by Department", // Bonus
+          "Delete department", //Bonus
+          "Delete role", //Bonus
+          "Delete employee", //Bonus
+          "View Total Department Budget", // Bonus
           "Exit",
         ],
       },
@@ -72,12 +77,36 @@ function mainTracker() {
           updateEmployeeRole();
           break;
 
-        case "Remove an employee":
-          removeAnEmployee();
+        case "Update Employee Manager":
+          updateEmployeeManager();
+          break;
+
+        case "View Employees by Manager":
+          viewEmployeesByManager();
+          break;
+
+        case "View Employees by Department":
+          viewEmployeesByDepartment();
+          break;
+
+        case "Delete department":
+          deleteDepartment();
+          break;
+
+        case "Delete role":
+          deleteRole();
+          break;
+
+        case "Delete employee":
+          deleteEmployee();
+          break;
+
+        case "View Total Department Budget":
+          viewTotalDepartmentBudget();
           break;
 
         case "Exit":
-          connection.end();
+          db.end();
           break;
       }
     });
@@ -86,7 +115,10 @@ function mainTracker() {
 // Function to view all employees
 function viewAllEmployees() {
   db.query(
-    "SELECT employee.id, employee.first_name, employee.last_name, role.title FROM employee INNER JOIN role ON employee.role_id = role.id",
+    "SELECT e.id, e.first_name, e.last_name, r.title, r.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager " +
+      "FROM employee AS e " +
+      "INNER JOIN role AS r ON e.role_id = r.id " +
+      "LEFT JOIN employee AS m ON e.manager_id = m.id",
     function (err, result, fields) {
       if (err) {
         console.error("Error viewing employees: " + err);
@@ -101,7 +133,7 @@ function viewAllEmployees() {
 // Function to view all roles
 function viewAllRoles() {
   db.query(
-    "SELECT role.id, role.title FROM role",
+    "SELECT role.id, role.title, role.salary FROM role",
     function (err, result, fields) {
       if (err) {
         console.error("Error viewing roles: " + err);
@@ -152,7 +184,6 @@ function addDepartment() {
 }
 
 function addRole() {
-  // You can prompt the user for role details like title, salary, and department_id here
   inquirer
     .prompt([
       {
@@ -213,7 +244,7 @@ function addEmployee() {
       },
     ])
     .then((answers) => {
-      // Check if manager_input exists and is not null or undefined before using toLowerCase()
+      //  confirm that manager_input exists and isn't null or undefined.
       const managerId =
         answers.manager_input && answers.manager_input.toLowerCase() === "n/a"
           ? null
@@ -221,12 +252,7 @@ function addEmployee() {
 
       db.query(
         "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)",
-        [
-          answers.first_name,
-          answers.last_name,
-          answers.role_id,
-          managerId, // Use the converted value
-        ],
+        [answers.first_name, answers.last_name, answers.role_id, managerId],
         (err, result) => {
           if (err) {
             console.error("Error adding employee: " + err);
@@ -240,7 +266,6 @@ function addEmployee() {
 }
 
 function updateEmployeeRole() {
-  // First, retrieve the list of employees and their roles from the database
   db.query(
     'SELECT employee.id, CONCAT(employee.first_name, " ", employee.last_name) AS employee_name, role.id AS role_id, role.title AS current_role ' +
       "FROM employee " +
@@ -251,13 +276,11 @@ function updateEmployeeRole() {
         return;
       }
 
-      // Create an array of employee choices for the inquirer prompt
       const employeeChoices = employees.map((employee) => ({
         name: `${employee.employee_name} (Current Role: ${employee.current_role})`,
         value: employee.id,
       }));
 
-      // Prompt the user to select an employee
       inquirer
         .prompt([
           {
@@ -268,20 +291,16 @@ function updateEmployeeRole() {
           },
         ])
         .then((employeeAnswer) => {
-          // Next, retrieve the list of roles from the database
           db.query("SELECT id, title FROM role", (err, roles) => {
             if (err) {
               console.error("Error retrieving roles: " + err);
               return;
             }
-
-            // Create an array of role choices for the inquirer prompt
             const roleChoices = roles.map((role) => ({
               name: role.title,
               value: role.id,
             }));
 
-            // Prompt the user to select a new role for the employee
             inquirer
               .prompt([
                 {
@@ -292,7 +311,6 @@ function updateEmployeeRole() {
                 },
               ])
               .then((roleAnswer) => {
-                // Update the employee's role in the database
                 db.query(
                   "UPDATE employee SET role_id = ? WHERE id = ?",
                   [roleAnswer.newRoleId, employeeAnswer.employeeId],
@@ -307,6 +325,52 @@ function updateEmployeeRole() {
                 );
               });
           });
+        });
+    }
+  );
+}
+
+function updateEmployeeManager() {
+  db.query(
+    "SELECT id, first_name, last_name FROM employee",
+    (err, employees) => {
+      if (err) {
+        console.error("Error retrieving employees: " + err);
+        return;
+      }
+
+      const employeeChoices = employees.map((employee) => ({
+        name: `${employee.first_name} ${employee.last_name}`,
+        value: employee.id,
+      }));
+
+      inquirer
+        .prompt([
+          {
+            type: "list",
+            name: "employeeId",
+            message: "Select the employee to update their manager:",
+            choices: employeeChoices,
+          },
+          {
+            type: "number",
+            name: "newManagerId",
+            message: "Enter the new manager's employee ID:",
+          },
+        ])
+        .then((answers) => {
+          db.query(
+            "UPDATE employee SET manager_id = ? WHERE id = ?",
+            [answers.newManagerId, answers.employeeId],
+            (err, result) => {
+              if (err) {
+                console.error("Error updating employee manager: " + err);
+                return;
+              }
+              console.log("Employee manager updated successfully.");
+              mainTracker();
+            }
+          );
         });
     }
   );

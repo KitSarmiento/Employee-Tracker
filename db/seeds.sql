@@ -20,13 +20,13 @@ VALUES ('Director of Engineer', 115000, 1),
 -- Employee Table --
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
 VALUES
-  ('Emily', 'Johnson', 2, NULL),
-  ('Daniel', 'Smith', 1, 1), -- Daniel's supervisor is Emily
+  ('Emily', 'Johnson', 1, NULL),
+  ('Daniel', 'Smith', 2, 1), -- Daniel's supervisor is Emily
   ('Sophia', 'Brown', 3, NULL),
   ('William', 'Davis', 4, 3), -- William's supervisor is Sophia
   ('Olivia', 'Wilson', 5, NULL),
   ('James', 'Anderson', 5, NULL),
   ('Mia', 'Martinez', 6, NULL),
-  ('Benjamin', 'Taylor', 7, 6), -- Benjamin's supervisor is Mia
-  ('Charlotte', 'Jones', 7, 6),  -- Charlotte's supervisor is Mia
+  ('Benjamin', 'Taylor', 7, 7), -- Benjamin's supervisor is Mia
+  ('Charlotte', 'Jones', 7, 7),  -- Charlotte's supervisor is Mia
   ('Samuel', 'Clark', 8, NULL);
