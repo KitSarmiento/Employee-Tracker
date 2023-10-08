@@ -20,7 +20,7 @@ const db = mysql.createConnection(
   },
   console.log(`Connected to the employeeTracker_db database.`)
 );
-
+// Prompt for the user to select the database they would like to select
 function mainTracker() {
   inquirer
     .prompt([
@@ -39,14 +39,14 @@ function mainTracker() {
           "Update Employee Manager", //Bonus
           "View Employees by Manager", // Bonus
           "View Employees by Department", // Bonus
-          "Delete department", //Bonus
-          "Delete role", //Bonus
-          "Delete employee", //Bonus
           "View Total Department Budget", // Bonus
+          "Delete item", //Bonus -  combine the delete function for department, role or employee
           "Exit",
         ],
       },
     ])
+
+    //switch statement for the user to select the database they would like to select
     .then((answers) => {
       switch (answers.action) {
         case "View all departments":
@@ -89,20 +89,12 @@ function mainTracker() {
           viewEmployeesByDepartment();
           break;
 
-        case "Delete department":
-          deleteDepartment();
-          break;
-
-        case "Delete role":
-          deleteRole();
-          break;
-
-        case "Delete employee":
-          deleteEmployee();
-          break;
-
         case "View Total Department Budget":
           viewTotalDepartmentBudget();
+          break;
+
+        case "Delete item": // Bonus -  combine the delete function for department, role or employee
+          deleteItem();
           break;
 
         case "Exit":
@@ -144,7 +136,7 @@ function viewAllRoles() {
     }
   );
 }
-
+// Function to view the departments.
 function viewAllDepartments() {
   db.query(
     "SELECT department.id, department.name FROM department",
@@ -158,6 +150,8 @@ function viewAllDepartments() {
     }
   );
 }
+
+// Function to add a department
 function addDepartment() {
   inquirer
     .prompt([
@@ -183,6 +177,7 @@ function addDepartment() {
     });
 }
 
+// Function to add a role
 function addRole() {
   inquirer
     .prompt([
@@ -218,6 +213,8 @@ function addRole() {
     });
 }
 
+// Function to add an employee
+// Prompt for the user to enter the employee's first name, last name, role ID, and manager
 function addEmployee() {
   inquirer
     .prompt([
@@ -244,7 +241,6 @@ function addEmployee() {
       },
     ])
     .then((answers) => {
-      //  confirm that manager_input exists and isn't null or undefined.
       const managerId =
         answers.manager_input && answers.manager_input.toLowerCase() === "n/a"
           ? null
@@ -281,6 +277,7 @@ function updateEmployeeRole() {
         value: employee.id,
       }));
 
+      // Prompt to allow the user to update the employee's role
       inquirer
         .prompt([
           {
@@ -330,6 +327,7 @@ function updateEmployeeRole() {
   );
 }
 
+// Function to update an employee's manager
 function updateEmployeeManager() {
   db.query(
     "SELECT id, first_name, last_name FROM employee",
@@ -344,6 +342,7 @@ function updateEmployeeManager() {
         value: employee.id,
       }));
 
+      // Prompt to allow the user to update the employee's manager
       inquirer
         .prompt([
           {
@@ -374,6 +373,124 @@ function updateEmployeeManager() {
         });
     }
   );
+}
+
+// Function to view all employees by manager
+function viewEmployeesByManager() {
+  db.query(
+    "SELECT e.id, CONCAT(e.first_name, ' ', e.last_name) AS employee_name, CONCAT(m.first_name, ' ', m.last_name) AS manager_name " +
+      "FROM employee e " +
+      "LEFT JOIN employee m ON e.manager_id = m.id",
+    (err, result) => {
+      if (err) {
+        console.error("Error viewing employees by manager: " + err);
+        return;
+      }
+      console.table(result);
+      mainTracker();
+    }
+  );
+}
+
+// Function to display employees by their department
+function viewEmployeesByDepartment() {
+  db.query(
+    "SELECT d.name AS department_name, e.id, CONCAT(e.first_name, ' ', e.last_name) AS employee_name, r.title AS job_title, r.salary " +
+      "FROM department d " +
+      "INNER JOIN role r ON d.id = r.department_id " +
+      "INNER JOIN employee e ON r.id = e.role_id",
+    (err, result) => {
+      if (err) {
+        console.error("Error viewing employees by department: " + err);
+        return;
+      }
+      console.table(result);
+      mainTracker();
+    }
+  );
+}
+
+// Function to view total budget of all departments
+// For the database query. I added a SUM function to calculate the total budget for each department.
+function viewTotalDepartmentBudget() {
+  db.query(
+    "SELECT d.name AS department_name, SUM(r.salary) AS total_budget " +
+      "FROM department d " +
+      "INNER JOIN role r ON d.id = r.department_id " +
+      "GROUP BY d.name",
+    (err, result) => {
+      if (err) {
+        console.error("Error viewing total department budget: " + err);
+        return;
+      }
+      console.table(result);
+      mainTracker();
+    }
+  );
+}
+
+// Delete function was based on the add function above and modified some of the functions to delete data from the database.
+// Function to delete a department, role, or employee
+function deleteItem() {
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "itemType",
+        message: "Select the type of item to delete:",
+        choices: ["Department", "Role", "Employee"],
+      },
+    ])
+    .then((typeAnswer) => {
+      const itemType = typeAnswer.itemType.toLowerCase();
+
+      let tableName;
+      let deleteType;
+      let promptMessage;
+
+      switch (itemType) {
+        case "department":
+          tableName = "department";
+          deleteType = "Department";
+          promptMessage = `Enter the ID of the ${deleteType} you want to delete:`;
+          break;
+        case "role":
+          tableName = "role";
+          deleteType = "Role";
+          promptMessage = `Enter the ID of the ${deleteType} you want to delete:`;
+          break;
+        case "employee":
+          tableName = "employee";
+          deleteType = "Employee";
+          promptMessage = `Enter the ID of the ${deleteType} you want to delete:`;
+          break;
+        default:
+          console.error("Invalid item type.");
+          mainTracker();
+          return;
+      }
+
+      inquirer
+        .prompt([
+          {
+            type: "input",
+            name: "itemId",
+            message: promptMessage,
+          },
+        ])
+        .then((answers) => {
+          const query = `DELETE FROM ${tableName} WHERE id = ?`;
+
+          db.query(query, [answers.itemId], (err, result) => {
+            if (err) {
+              console.error(`Error deleting ${deleteType}: ` + err);
+              return;
+            }
+            console.log(`${deleteType} deleted successfully.`);
+            mainTracker();
+          });
+        });
+    });
 }
 
 mainTracker();
