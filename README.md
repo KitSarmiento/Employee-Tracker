@@ -14,6 +14,10 @@ No installation is required for this project. Please refer to the usage section 
 
 To utilize this app, access the integrated terminal and input either "npm start" or "node server.js" command. This will provide a list of options for the employee tracker, allowing the user to view, add, and delete employees, departments, and roles as needed. Additionally, users can update employee roles and managers, and obtain the total department budget. Once all necessary prompts are answered, the application will notify the user of successful execution or display an error message if necessary.
 
+Walkthrough video: https://drive.google.com/file/d/1Qr8djTIuL6QKEzNFDOxIBOPj97m-1j0f/view
+
+Project Screenshot:
+
 ![screenshot](https://github.com/KitSarmiento/Employee-Tracker/assets/135483936/37ef8f7a-bc56-4914-96c0-29fd335c5930)
 
 ## Credits
