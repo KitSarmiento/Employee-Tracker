@@ -391,4 +391,20 @@ function viewEmployeesByManager() {
   );
 }
 
+function viewEmployeesByDepartment() {
+  db.query(
+    "SELECT d.name AS department_name, e.id, CONCAT(e.first_name, ' ', e.last_name) AS employee_name, r.title AS job_title, r.salary " +
+      "FROM department d " +
+      "INNER JOIN role r ON d.id = r.department_id " +
+      "INNER JOIN employee e ON r.id = e.role_id",
+    (err, result) => {
+      if (err) {
+        console.error("Error viewing employees by department: " + err);
+        return;
+      }
+      console.table(result);
+      mainTracker();
+    }
+  );
+}
 mainTracker();
